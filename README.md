@@ -13,4 +13,4 @@
 ![](./images/user.jpg)
 
 ###编译
-        javac -encoding utf-8 PYPSchoolNetwork.java
+>javac -encoding utf-8 PYPSchoolNetwork.java
