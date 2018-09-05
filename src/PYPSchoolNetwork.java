@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;  
 import java.util.regex.Matcher;  
 import java.util.regex.Pattern;
+import java.util.Date;
 
 public class PYPSchoolNetwork{
     /**
@@ -35,7 +36,7 @@ public class PYPSchoolNetwork{
             conn.setRequestProperty("accept", "*/*");
             conn.setRequestProperty("connection", "Keep-Alive");
             conn.setRequestProperty("user-agent",
-									"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.104 Safari/537.36 Core/1.53.3538.400 QQBrowser/9.6.12501.400");
+                                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.104 Safari/537.36 Core/1.53.3538.400 QQBrowser/9.6.12501.400");
 
             conn.setDoOutput(true);
             conn.setDoInput(true);
@@ -46,13 +47,13 @@ public class PYPSchoolNetwork{
             output.flush();
 
             input = new BufferedReader(
-				new InputStreamReader(conn.getInputStream()));
+                new InputStreamReader(conn.getInputStream()));
             String line;
             while ((line = input.readLine()) != null) {
                 result += line;
             }
         } catch (Exception e) {
-            System.out.println("print error ,Exception!"+e);
+            log("print error ,Exception!"+e);
             e.printStackTrace();
         }
         //finally close 
@@ -80,7 +81,7 @@ public class PYPSchoolNetwork{
     public static String HttpGet(String url,String params)
     {
         String result="";
-        //System.out.println("into");
+        //log("into");
         BufferedReader in=null;
         try {
             String urlName=params.equals("")?url:url+"?"+params;
@@ -95,7 +96,7 @@ public class PYPSchoolNetwork{
             Map<String,List<String>> map=conn.getHeaderFields();
             for(String key:map.keySet())
             {
-                System.out.println(key+"--->"+map.get(key));
+                log(key+"--->"+map.get(key));
             }
             in=new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;
@@ -106,7 +107,7 @@ public class PYPSchoolNetwork{
         } 
         catch (Exception e) {
             // TODO Auto-generated catch block
-            System.out.println("GET error"+e);
+            log("GET error"+e);
             e.printStackTrace();
         }
         finally
@@ -150,7 +151,7 @@ public class PYPSchoolNetwork{
      * @return 
      * from web...
      */  
-	public static void writeByFileOutputStream(String content,String filePath) {  
+    public static void writeByFileOutputStream(String content,String filePath) {  
 
         FileOutputStream fop = null;  
         File file;
@@ -194,8 +195,30 @@ public class PYPSchoolNetwork{
             return m.group(1);  
         }  
         return "";  
-    }  
+    }
 
+    public static void log(String conent) {
+    System.out.println(conent);
+    FileWriter fw = null;
+        try {
+            //如果文件存在，则追加内容；如果文件不存在，则创建文件
+            File f = new File("C://schoolNetwork_log.txt");
+            fw     = new FileWriter(f, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+            PrintWriter pw = new PrintWriter(fw);
+            Date tempTime = new Date();
+            pw.println(tempTime.toString() + ":" + conent);
+            pw.flush();
+        try {
+            fw.flush();
+            pw.close();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public static boolean netWorkConnct(){
         String reTest  = HttpGet("https://www.sogou.com/","");
 
@@ -209,7 +232,7 @@ public class PYPSchoolNetwork{
 
         String userId   = ""; //账号
         String password = ""; //密码
-        // 只支持登录教职员工账号
+        
         String service  = "teacher";
 
         try{
@@ -234,26 +257,30 @@ public class PYPSchoolNetwork{
                     String result  = new String(getSubUtilSimple(reOnePost,"result\":\"(.*?)\""));
                     String message = new String(getSubUtilSimple(reOnePost,"message\":\"(.*?)\""));
 
-                    System.out.println("result--->["+result+"]");
-                    System.out.println("message--->["+message+"]");
+                    log("result--->["+result+"]");
+                    log("message--->["+message+"]");
 
                     if (result.indexOf("success")>-1) {
-                        System.out.println("message--->[连接成功,定向访问检测...]");
+                        log("user " + userId + " login success");
+                        log("message--->[连接成功,定向访问检测...]");
                         if (!netWorkConnct()) {
 
                             reTest           = getLocation("http://192.168.200.84/eportal/gologout.jsp");
                             String userIndex = new String(getSubUtilSimple(reTest + "&&","userIndex=(.*?)&&"));
 
-                            System.out.println("userIndex--->["+userIndex+"]");
+                            log("userIndex--->["+userIndex+"]");
 
                             if (userIndex.length()>10) {
                                 reOnePost  = HttpPost("http://192.168.200.84/eportal/InterFace.do?method=logout","userIndex=" + userIndex);
-                                System.out.println("message--->[登出,重新登录]");
+                                log("message--->[登出,重新登录]");
                                 String[] str = new String[0];
                                 main(str);
                             }else{
-                                System.out.println("message--->[网络鉴定正常!]");
+                                log("message--->[异常接口:192.168.200.84]");
                             }
+
+                        }else{
+                            log("message--->[网络鉴定正常!]");
                         }
                         
                     }
@@ -261,16 +288,16 @@ public class PYPSchoolNetwork{
 
             }else{
                     if (!netWorkConnct()) {
-                        System.out.println("message--->[异常接口:192.168.200.84]");
+                        log("message--->[异常接口:192.168.200.84]");
                     }else{
-                        System.out.println("message--->[网络鉴定正常!]");
+                        log("message--->[网络鉴定正常!]");
                     }
                     
             }
 
         }catch (Exception ea) {
-            System.out.println("Exception--->error 1001");
+            log("Exception--->error 1001");
             //ea.printStackTrace();
         }
-	}
+    }
 }
